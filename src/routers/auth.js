@@ -6,8 +6,9 @@ import {
     loginUserController,
     logoutUserController,
     refreshUserController,
-    sendRestEmailController } from "../controllers/auth.js";
-import { registerUserSchema, loginUserSchema, sendResetUserSchema} from "../validation/auth.js";
+    sendResetEmailController,
+    resetPasswordController } from "../controllers/auth.js";
+import { registerUserSchema, loginUserSchema, sendResetUserSchema, resetPasswordSchema } from "../validation/auth.js";
 
 export const authRouter = Router();
 
@@ -15,4 +16,6 @@ authRouter.post("/register", validateBody(registerUserSchema), ctrlWrapper(regis
 authRouter.post("/login", validateBody(loginUserSchema), ctrlWrapper(loginUserController));
 authRouter.post("/refresh", ctrlWrapper(refreshUserController));
 authRouter.post("/logout", ctrlWrapper(logoutUserController));
-authRouter.post("/send-reset-email", validateBody(sendResetUserSchema), ctrlWrapper(sendRestEmailController));
+authRouter.post("/send-reset-email", validateBody(sendResetUserSchema), ctrlWrapper(sendResetEmailController));
+authRouter.post("/reset-pwd", validateBody(resetPasswordSchema), ctrlWrapper(resetPasswordController));
+

@@ -5,7 +5,7 @@ import { SessionsCollection } from "../db/models/session.js";
 import { randomBytes } from "crypto";
 import { FIFTEEN_MINUTES, ONE_DAY } from "../constants/auth.js";
 import { sendEmail } from "../utils/sendEmail.js";
-import { createJwtToken } from "../utils/jwt.js";
+import { createJwtToken, verifyToken } from "../utils/jwt.js";
 
 const createSession = () => {
     const accessToken = randomBytes(30).toString('base64');
@@ -110,5 +110,25 @@ export const refreshUser = async ({ sessionId, refreshToken }) => {
       if (!emailSent) {
         throw createHttpError(500, 'Failed to send the email, please try again later.');
       }
+  };
 
+
+  export const resetPassword = async (payload) => {
+    const entries = verifyToken(payload.token);
+
+    const user = await UserCollection.findOne({
+      email: entries.email,
+      _id: entries.sub,
+    });
+
+    if (!user) {
+      throw createHttpError(404, 'User not found');
+    }
+
+    const encryptedPassword = await bcrypt.hash(payload.password, 10);
+
+    await UserCollection.updateOne(
+      { _id: user._id },
+      { password: encryptedPassword },
+    );
   };
