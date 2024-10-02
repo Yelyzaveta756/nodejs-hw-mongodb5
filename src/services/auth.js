@@ -1,11 +1,16 @@
 import createHttpError from "http-errors";
 import bcrypt from 'bcrypt';
+import handlebars from 'handlebars';
+import path from 'node:path';
+import fs from 'node:fs/promises';
 import { UserCollection } from "../db/models/auth.js";
 import { SessionsCollection } from "../db/models/session.js";
 import { randomBytes } from "crypto";
-import { FIFTEEN_MINUTES, ONE_DAY } from "../constants/auth.js";
+import { FIFTEEN_MINUTES, ONE_DAY, SMTP } from "../constants/auth.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { createJwtToken, verifyToken } from "../utils/jwt.js";
+import { TEMPLATES_DIR } from "../constants/auth.js";
+import { env } from "../utils/env.js";
 
 const createSession = () => {
     const accessToken = randomBytes(30).toString('base64');
@@ -101,10 +106,20 @@ export const refreshUser = async ({ sessionId, refreshToken }) => {
       const resetToken = createJwtToken({sub: user._id, email,});
       console.log(resetToken);
 
+      const resetPasswordTemplatePath = path.join(TEMPLATES_DIR, 'send-reset-email.html');
+
+      const templateSource = (await fs.readFile(resetPasswordTemplatePath)).toString();
+
+      const template = handlebars.compile(templateSource);
+      const html = template({
+        name: user.name,
+        link: `${env(SMTP.APP_DOMAIN)}/send-reset-email?token=${resetToken}`,
+      });
+
       const emailSent = await sendEmail({
         to: email,
         subject: "Reset your password",
-        html: `<p>Click <a target="_blank" href="http://localhost:3000/auth/send-reset-email?token=${resetToken}">here </a>to reset your password</p>`
+        html,
       });
 
       if (!emailSent) {
