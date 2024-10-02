@@ -1,9 +1,11 @@
-import { UserCollection } from "../db/models/auth.js";
-import { SessionsCollection } from "../db/models/session.js";
 import createHttpError from "http-errors";
 import bcrypt from 'bcrypt';
+import { UserCollection } from "../db/models/auth.js";
+import { SessionsCollection } from "../db/models/session.js";
 import { randomBytes } from "crypto";
 import { FIFTEEN_MINUTES, ONE_DAY } from "../constants/auth.js";
+import { sendEmail } from "../utils/sendEmail.js";
+import { createJwtToken } from "../utils/jwt.js";
 
 const createSession = () => {
     const accessToken = randomBytes(30).toString('base64');
@@ -84,8 +86,29 @@ export const refreshUser = async ({ sessionId, refreshToken }) => {
   });
   };
 
-
-
   export const logoutUser = async (sessionId) => {
     await SessionsCollection.deleteOne({ _id: sessionId });
+  };
+
+  export const sendResetUser = async (email) => {
+    const user = await UserCollection.findOne({email});
+    console.log(user);
+
+      if (!user) {
+        throw createHttpError(404, 'User not found');
+      };
+
+      const resetToken = createJwtToken({sub: user._id, email,});
+      console.log(resetToken);
+
+      const emailSent = await sendEmail({
+        to: email,
+        subject: "Reset your password",
+        html: `<p>Click <a target="_blank" href="http://localhost:3000/auth/send-reset-email?token=${resetToken}">here </a>to reset your password</p>`
+      });
+
+      if (!emailSent) {
+        throw createHttpError(500, 'Failed to send the email, please try again later.');
+      }
+
   };
