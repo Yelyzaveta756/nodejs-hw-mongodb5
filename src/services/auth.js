@@ -113,7 +113,7 @@ export const refreshUser = async ({ sessionId, refreshToken }) => {
       const template = handlebars.compile(templateSource);
       const html = template({
         name: user.name,
-        link: `${env(SMTP.APP_DOMAIN)}/send-reset-email?token=${resetToken}`,
+        link: `${env(SMTP.APP_DOMAIN)}/auth/send-reset-email?token=${resetToken}`,
       });
 
       const emailSent = await sendEmail({

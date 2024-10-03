@@ -28,7 +28,8 @@ import { model, Schema } from "mongoose";
         required: true,
         default: false,
     },
- },
+    photo: {type: String}
+    },
     {
         timestamps: true,
         versionKey: false,

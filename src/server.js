@@ -7,6 +7,7 @@ import { env } from './utils/env.js';
 import cookieParser from 'cookie-parser';
 import { contactRouter } from './routers/contacts.js';
 import { authRouter } from './routers/auth.js';
+import { UPLOAD_DIR } from './constants/auth.js';
 
 export default function setupServer(){
     const app = express();
@@ -17,8 +18,10 @@ export default function setupServer(){
     app.use(express.json());
     app.use(cookieParser());
 
+
     app.use('/auth', authRouter);
     app.use(contactRouter);
+    app.use('/uploads', express.static(UPLOAD_DIR));
 
     app.use('*', notFoundHandler);
 
